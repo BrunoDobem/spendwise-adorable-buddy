@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, TrendingUp, Wallet, ArrowDown, Clock, CreditCard, AlertTriangle } from 'lucide-react';
@@ -12,7 +11,6 @@ import { useSettings } from '@/hooks/useSettings';
 import SpendingLimitBanner from './SpendingLimitBanner';
 import { useTranslation } from '@/hooks/useTranslation';
 
-// Sample data for demo purposes
 const generateSampleTransactions = (): Transaction[] => {
   const categories: Category[] = ['food', 'shopping', 'transport', 'entertainment', 'housing', 'utilities', 'health', 'other'];
   const descriptions = [
@@ -62,7 +60,6 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    // Simulate loading data from a database
     setTimeout(() => {
       setTransactions(generateSampleTransactions());
       setChartData(generateSampleChartData());
@@ -90,15 +87,13 @@ const Dashboard: React.FC = () => {
     setTransactions(transactions.filter(transaction => transaction.id !== id));
   };
   
-  // Filter transactions for current month display
   const currentMonthTransactions = transactions.filter(transaction => {
     if (transaction.paymentMethod === 'credit' && transaction.isNextMonth) {
-      return false; // Don't count credit card transactions marked for next month
+      return false;
     }
     return true;
   });
 
-  // Calculate total spending (excluding credit card transactions for next month)
   const totalSpending = currentMonthTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
   
   const spendingByCategory = currentMonthTransactions.reduce((acc, transaction) => {
@@ -116,7 +111,6 @@ const Dashboard: React.FC = () => {
     return acc;
   }, [] as { category: Category; amount: number }[]);
 
-  // Check if we're over the spending limit
   const isOverSpendingLimit = settings.spendingLimit > 0 && totalSpending > settings.spendingLimit;
   const spendingPercentage = settings.spendingLimit > 0 ? (totalSpending / settings.spendingLimit) * 100 : 0;
   
@@ -176,7 +170,7 @@ const Dashboard: React.FC = () => {
         
         <StatCard
           title={t('recentActivity')}
-          value={`${transactions.length} ${t('transactions')}`}
+          value={`${transactions.length} ${t('transactionsLabel')}`}
           description={t('last30Days')}
           icon={<Clock className="h-5 w-5" />}
           delay={3}

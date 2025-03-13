@@ -14,6 +14,7 @@ interface StatCardProps {
   };
   className?: string;
   delay?: number;
+  alert?: boolean; // Added the alert property
 }
 
 export const StatCard: React.FC<StatCardProps> = ({ 
@@ -23,7 +24,8 @@ export const StatCard: React.FC<StatCardProps> = ({
   icon, 
   trend, 
   className,
-  delay = 0 
+  delay = 0,
+  alert = false // Default value is false
 }) => {
   return (
     <div 
@@ -31,13 +33,17 @@ export const StatCard: React.FC<StatCardProps> = ({
         "bg-card rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300",
         "border border-border/50 h-full",
         "slide-up opacity-0",
+        alert ? "border-red-500 dark:border-red-700 bg-red-50 dark:bg-red-900/20" : "",
         className
       )}
       style={{ animationDelay: `${delay * 0.1}s`, animationFillMode: 'forwards' }}
     >
       <div className="flex justify-between items-start mb-2">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+        <div className={cn(
+          "p-2 rounded-lg",
+          alert ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-primary/10 text-primary"
+        )}>
           {icon}
         </div>
       </div>

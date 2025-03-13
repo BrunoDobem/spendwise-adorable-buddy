@@ -22,7 +22,7 @@ const ptBR: Translations = {
   largestExpense: 'Maior Despesa',
   thisMonth: 'Este mês',
   recentActivity: 'Atividade Recente',
-  transactions: 'transações',
+  transactionsLabel: 'transações', // Renamed to avoid duplicate
   spendingTrends: 'Tendências de Gastos',
   thisWeek: 'Esta semana',
   spending: 'Gastos',
@@ -65,7 +65,7 @@ const ptBR: Translations = {
   financialReports: 'Relatórios Financeiros',
   analyzeYourSpending: 'Analise seus padrões de gastos',
   monthlyOverview: 'Visão Mensal',
-  spendingTrends: 'Tendências de Gastos',
+  spendingTrendsReport: 'Tendências de Gastos', // Renamed to avoid duplicate
   categoryBreakdown: 'Divisão por Categoria',
   month: 'Mês',
   months: 'Meses',
@@ -122,7 +122,7 @@ const en: Translations = {
   largestExpense: 'Largest Expense',
   thisMonth: 'This month',
   recentActivity: 'Recent Activity',
-  transactions: 'transactions',
+  transactionsLabel: 'transactions', // Renamed to avoid duplicate
   spendingTrends: 'Spending Trends',
   thisWeek: 'This Week',
   spending: 'Spending',
@@ -165,7 +165,7 @@ const en: Translations = {
   financialReports: 'Financial Reports',
   analyzeYourSpending: 'Analyze your spending patterns',
   monthlyOverview: 'Monthly Overview',
-  spendingTrends: 'Spending Trends',
+  spendingTrendsReport: 'Spending Trends', // Renamed to avoid duplicate
   categoryBreakdown: 'Category Breakdown',
   month: 'Month',
   months: 'Months',
