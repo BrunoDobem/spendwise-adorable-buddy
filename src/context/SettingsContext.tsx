@@ -1,19 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ThemeMode, Language, UserSettings, Currency } from '@/types';
+import { ThemeMode, Language, UserSettings } from '@/types';
 
 // Default settings
 const defaultSettings: UserSettings = {
   theme: 'system',
   language: 'en',
   spendingLimit: 2000,
-  currency: 'USD'
-};
-
-// Map language to default currency
-const languageToCurrency: Record<Language, Currency> = {
-  'en': 'USD',
-  'pt-BR': 'BRL'
 };
 
 interface SettingsContextType {
@@ -21,8 +14,6 @@ interface SettingsContextType {
   updateTheme: (theme: ThemeMode) => void;
   updateLanguage: (language: Language) => void;
   updateSpendingLimit: (limit: number) => void;
-  updateCurrency: (currency: Currency) => void;
-  formatCurrency: (amount: number) => string;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -53,30 +44,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateLanguage = (language: Language) => {
-    setSettings(prev => {
-      // Auto-update currency based on language if not manually set
-      const currency = languageToCurrency[language];
-      return { ...prev, language, currency };
-    });
+    setSettings(prev => ({ ...prev, language }));
   };
 
   const updateSpendingLimit = (limit: number) => {
     setSettings(prev => ({ ...prev, spendingLimit: limit }));
-  };
-
-  const updateCurrency = (currency: Currency) => {
-    setSettings(prev => ({ ...prev, currency }));
-  };
-
-  const formatCurrency = (amount: number): string => {
-    const currencyOptions: Intl.NumberFormatOptions = {
-      style: 'currency',
-      currency: settings.currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    };
-
-    return amount.toLocaleString(settings.language, currencyOptions);
   };
 
   return (
@@ -85,9 +57,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         settings, 
         updateTheme, 
         updateLanguage, 
-        updateSpendingLimit,
-        updateCurrency,
-        formatCurrency
+        updateSpendingLimit 
       }}
     >
       {children}

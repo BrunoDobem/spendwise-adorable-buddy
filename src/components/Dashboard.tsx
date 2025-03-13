@@ -15,13 +15,15 @@ import { useTranslation } from '@/hooks/useTranslation';
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { transactions, paymentMethods } = useTransactions();
-  const { settings, formatCurrency } = useSettings();
+  const { settings } = useSettings();
   
+  // Generate chart data from transactions
   const generateChartData = () => {
     const days = 7;
     const today = new Date();
     const dailyData: { [key: string]: number } = {};
     
+    // Initialize the past 7 days with 0
     for (let i = 0; i < days; i++) {
       const date = new Date();
       date.setDate(today.getDate() - (days - 1) + i);
@@ -29,14 +31,17 @@ const Dashboard: React.FC = () => {
       dailyData[dayName] = 0;
     }
     
+    // Sum transactions by day
     transactions.forEach(transaction => {
       const transactionDate = new Date(transaction.date);
+      // Only include transactions from the past 7 days
       if ((today.getTime() - transactionDate.getTime()) / (1000 * 3600 * 24) < days) {
         const dayName = transactionDate.toLocaleDateString('en-US', { weekday: 'short' });
         dailyData[dayName] = (dailyData[dayName] || 0) + transaction.amount;
       }
     });
     
+    // Convert to array format for chart
     return Object.keys(dailyData).map(key => ({
       name: key,
       spending: dailyData[key]
@@ -45,14 +50,17 @@ const Dashboard: React.FC = () => {
   
   const chartData = generateChartData();
   
+  // Calculate current month transactions
   const getCurrentMonthTransactions = () => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
     
     return transactions.filter(transaction => {
+      // For regular transactions, check the transaction date
       const transactionDate = new Date(transaction.date);
       
+      // For credit card transactions with future due date, check the dueMonth
       if (transaction.dueMonth) {
         const [dueYear, dueMonth] = transaction.dueMonth.split('-').map(Number);
         return dueYear === currentYear && dueMonth - 1 === currentMonth;
@@ -66,20 +74,23 @@ const Dashboard: React.FC = () => {
   const currentMonthTransactions = getCurrentMonthTransactions();
   const totalSpending = currentMonthTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
   
+  // Check if spending limit is exceeded
   const isSpendingLimitExceeded = totalSpending > settings.spendingLimit;
   
+  // Show alert toast when spending limit is exceeded
   useEffect(() => {
     if (isSpendingLimitExceeded) {
       toast.warning(
-        `${t('spendingLimitAlert')}: ${t('limitExceeded')} ${formatCurrency(settings.spendingLimit)}`,
+        `${t('spendingLimitAlert')}: ${t('limitExceeded')} $${settings.spendingLimit.toFixed(2)}`,
         {
           duration: 5000,
           icon: <AlertTriangle className="text-yellow-500" />
         }
       );
     }
-  }, [isSpendingLimitExceeded, settings.spendingLimit, t, formatCurrency]);
+  }, [isSpendingLimitExceeded, settings.spendingLimit, t]);
   
+  // Spending by category
   const spendingByCategory = currentMonthTransactions.reduce((acc, transaction) => {
     const existingCategory = acc.find(item => item.category === transaction.category);
     
@@ -95,13 +106,9 @@ const Dashboard: React.FC = () => {
     return acc;
   }, [] as { category: string; amount: number }[]);
   
-  // Find the largest expense
-  const largestExpense = transactions.length > 0 
-    ? transactions.reduce((max, current) => 
-        current.amount > max.amount ? current : max, 
-        transactions[0]
-      ) 
-    : null;
+  // Get largest expense
+  const largestExpense = transactions.length > 0 ? 
+    Math.max(...transactions.map(t => t.amount)) : 0;
   
   return (
     <div className="container mx-auto px-4 py-6 mt-16">
@@ -113,7 +120,7 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           title={t('totalSpending')}
-          value={formatCurrency(totalSpending)}
+          value={`$${totalSpending.toFixed(2)}`}
           description={t('currentMonth')}
           icon={<DollarSign className="h-5 w-5" />}
           trend={{ value: 12, isPositive: false }}
@@ -123,7 +130,7 @@ const Dashboard: React.FC = () => {
         
         <StatCard
           title={t('averageDaily')}
-          value={formatCurrency(totalSpending / 30)}
+          value={`$${(totalSpending / 30).toFixed(2)}`}
           description={t('last30Days')}
           icon={<TrendingUp className="h-5 w-5" />}
           trend={{ value: 3, isPositive: true }}
@@ -132,15 +139,15 @@ const Dashboard: React.FC = () => {
         
         <StatCard
           title={t('largestExpense')}
-          value={largestExpense ? formatCurrency(largestExpense.amount) : '0.00'}
-          description={largestExpense ? largestExpense.description : t('noTransactions')}
+          value={`$${largestExpense.toFixed(2)}`}
+          description={t('thisMonth')}
           icon={<ArrowDown className="h-5 w-5" />}
           delay={2}
         />
         
         <StatCard
           title={t('recentActivity')}
-          value={`${transactions.length} ${t('transactionsLabel')}`}
+          value={`${transactions.length} ${t('transactions')}`}
           description={t('last30Days')}
           icon={<Clock className="h-5 w-5" />}
           delay={3}
@@ -174,13 +181,9 @@ const Dashboard: React.FC = () => {
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                 <XAxis dataKey="name" tickLine={false} />
-                <YAxis 
-                  tickFormatter={(value) => formatCurrency(value)} 
-                  tickLine={false} 
-                  axisLine={false} 
-                />
+                <YAxis tickFormatter={(value) => `$${value}`} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  formatter={(value) => [formatCurrency(value as number), t('spending')]}
+                  formatter={(value) => [`$${value}`, t('spending')]}
                   contentStyle={{ 
                     borderRadius: '8px', 
                     border: '1px solid hsl(var(--border))',

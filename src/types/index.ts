@@ -20,11 +20,9 @@ export interface Transaction {
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type Language = 'en' | 'pt-BR';
-export type Currency = 'USD' | 'BRL';
 
 export interface UserSettings {
   theme: ThemeMode;
   language: Language;
   spendingLimit: number;
-  currency: Currency;
 }

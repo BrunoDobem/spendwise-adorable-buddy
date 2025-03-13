@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTransactions } from '@/context/TransactionsContext';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useSettings } from '@/context/SettingsContext';
 
 interface TransactionFormProps {
   className?: string;
@@ -14,7 +13,6 @@ interface TransactionFormProps {
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) => {
   const { t } = useTranslation();
-  const { settings, formatCurrency } = useSettings();
   const { addTransaction, paymentMethods } = useTransactions();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -29,6 +27,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
     'housing', 'utilities', 'health', 'other'
   ];
 
+  // Effect to handle due month when payment method changes
   useEffect(() => {
     const selectedMethod = paymentMethods.find(m => m.id === paymentMethod);
     if (selectedMethod?.type === 'credit') {
@@ -56,6 +55,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
       dueMonth,
     });
     
+    // Reset form
     setDescription('');
     setAmount('');
     setDate(new Date().toISOString().split('T')[0]);
@@ -67,13 +67,12 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
     toast.success(t('transactionAdded'));
   };
   
+  // Helper function to get next month
   const getNextMonth = () => {
     const date = new Date();
     date.setMonth(date.getMonth() + 1);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   };
-
-  const currencySymbol = settings.currency === 'USD' ? '$' : 'R$';
 
   return (
     <div className={cn("bg-card rounded-xl shadow-sm border border-border/50", className)}>
@@ -111,7 +110,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
                   {t('amount')}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
                   <input
                     id="amount"
                     type="number"
@@ -199,7 +198,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
                         : 'bg-secondary text-secondary-foreground'
                     )}
                   >
-                    {t('currentMonthOption')}
+                    {t('currentMonth')}
                   </button>
                   <button
                     type="button"

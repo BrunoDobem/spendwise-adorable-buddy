@@ -101,11 +101,6 @@ const Settings = () => {
                     </button>
                   ))}
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {settings.language === 'en' 
-                    ? 'Currency: USD (Dollar)' 
-                    : 'Moeda: BRL (Real)'}
-                </p>
               </div>
             </div>
           </div>
@@ -126,9 +121,7 @@ const Settings = () => {
                 </p>
                 <div className="flex space-x-2">
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                      {settings.currency === 'USD' ? '$' : 'R$'}
-                    </span>
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
                     <input
                       id="spendingLimit"
                       type="number"
