@@ -45,7 +45,7 @@ const translations = {
     'largestExpense': 'Largest Expense',
     'thisMonth': 'This month',
     'recentActivity': 'Recent Activity',
-    'transactions': 'transactions',
+    'transactionsLabel': 'transactions',
     'spendingTrends': 'Spending Trends',
     'thisWeek': 'This Week',
     'spending': 'Spending',
@@ -60,7 +60,7 @@ const translations = {
     'category': 'Category',
     'paymentMethod': 'Payment Method',
     'dueMonth': 'Due Month (Credit Card)',
-    'currentMonth': 'Current Month',
+    'currentMonthOption': 'Current Month',
     'nextMonth': 'Next Month',
     'cancel': 'Cancel',
     'addTransaction': 'Add Transaction',
@@ -137,7 +137,12 @@ const translations = {
     
     // Alerts
     'spendingLimitAlert': 'Spending Limit Alert',
-    'limitExceeded': 'You have exceeded your monthly spending limit of'
+    'limitExceeded': 'You have exceeded your monthly spending limit of',
+    
+    // Navigation
+    'dashboard': 'Dashboard',
+    'transactions': 'Transactions',
+    'reports': 'Reports'
   },
   pt: {
     // Dashboard
@@ -150,7 +155,7 @@ const translations = {
     'largestExpense': 'Maior Despesa',
     'thisMonth': 'Este mês',
     'recentActivity': 'Atividade Recente',
-    'transactions': 'transações',
+    'transactionsLabel': 'transações',
     'spendingTrends': 'Tendências de Gastos',
     'thisWeek': 'Esta Semana',
     'spending': 'Gastos',
@@ -165,7 +170,7 @@ const translations = {
     'category': 'Categoria',
     'paymentMethod': 'Forma de Pagamento',
     'dueMonth': 'Mês de Vencimento (Cartão de Crédito)',
-    'currentMonth': 'Mês Atual',
+    'currentMonthOption': 'Mês Atual',
     'nextMonth': 'Próximo Mês',
     'cancel': 'Cancelar',
     'addTransaction': 'Adicionar Transação',
@@ -242,6 +247,12 @@ const translations = {
     
     // Alerts
     'spendingLimitAlert': 'Alerta de Limite de Gastos',
-    'limitExceeded': 'Você excedeu seu limite mensal de gastos de'
+    'limitExceeded': 'Você excedeu seu limite mensal de gastos de',
+    
+    // Navigation
+    'dashboard': 'Dashboard',
+    'transactions': 'Transações',
+    'reports': 'Relatórios'
   }
 };
+

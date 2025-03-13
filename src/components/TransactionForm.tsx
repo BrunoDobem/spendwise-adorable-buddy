@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Category } from '@/types';
@@ -27,7 +26,6 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
     'housing', 'utilities', 'health', 'other'
   ];
 
-  // Effect to handle due month when payment method changes
   useEffect(() => {
     const selectedMethod = paymentMethods.find(m => m.id === paymentMethod);
     if (selectedMethod?.type === 'credit') {
@@ -55,7 +53,6 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
       dueMonth,
     });
     
-    // Reset form
     setDescription('');
     setAmount('');
     setDate(new Date().toISOString().split('T')[0]);
@@ -67,7 +64,6 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
     toast.success(t('transactionAdded'));
   };
   
-  // Helper function to get next month
   const getNextMonth = () => {
     const date = new Date();
     date.setMonth(date.getMonth() + 1);
@@ -198,7 +194,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
                         : 'bg-secondary text-secondary-foreground'
                     )}
                   >
-                    {t('currentMonth')}
+                    {t('currentMonthOption')}
                   </button>
                   <button
                     type="button"

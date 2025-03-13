@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, TrendingUp, Wallet, ArrowDown, Clock, CreditCard, AlertTriangle } from 'lucide-react';
@@ -17,13 +16,11 @@ const Dashboard: React.FC = () => {
   const { transactions, paymentMethods } = useTransactions();
   const { settings } = useSettings();
   
-  // Generate chart data from transactions
   const generateChartData = () => {
     const days = 7;
     const today = new Date();
     const dailyData: { [key: string]: number } = {};
     
-    // Initialize the past 7 days with 0
     for (let i = 0; i < days; i++) {
       const date = new Date();
       date.setDate(today.getDate() - (days - 1) + i);
@@ -31,17 +28,14 @@ const Dashboard: React.FC = () => {
       dailyData[dayName] = 0;
     }
     
-    // Sum transactions by day
     transactions.forEach(transaction => {
       const transactionDate = new Date(transaction.date);
-      // Only include transactions from the past 7 days
       if ((today.getTime() - transactionDate.getTime()) / (1000 * 3600 * 24) < days) {
         const dayName = transactionDate.toLocaleDateString('en-US', { weekday: 'short' });
         dailyData[dayName] = (dailyData[dayName] || 0) + transaction.amount;
       }
     });
     
-    // Convert to array format for chart
     return Object.keys(dailyData).map(key => ({
       name: key,
       spending: dailyData[key]
@@ -50,17 +44,14 @@ const Dashboard: React.FC = () => {
   
   const chartData = generateChartData();
   
-  // Calculate current month transactions
   const getCurrentMonthTransactions = () => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const currentMonth = today.getMonth();
     
     return transactions.filter(transaction => {
-      // For regular transactions, check the transaction date
       const transactionDate = new Date(transaction.date);
       
-      // For credit card transactions with future due date, check the dueMonth
       if (transaction.dueMonth) {
         const [dueYear, dueMonth] = transaction.dueMonth.split('-').map(Number);
         return dueYear === currentYear && dueMonth - 1 === currentMonth;
@@ -74,10 +65,8 @@ const Dashboard: React.FC = () => {
   const currentMonthTransactions = getCurrentMonthTransactions();
   const totalSpending = currentMonthTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
   
-  // Check if spending limit is exceeded
   const isSpendingLimitExceeded = totalSpending > settings.spendingLimit;
   
-  // Show alert toast when spending limit is exceeded
   useEffect(() => {
     if (isSpendingLimitExceeded) {
       toast.warning(
@@ -90,7 +79,6 @@ const Dashboard: React.FC = () => {
     }
   }, [isSpendingLimitExceeded, settings.spendingLimit, t]);
   
-  // Spending by category
   const spendingByCategory = currentMonthTransactions.reduce((acc, transaction) => {
     const existingCategory = acc.find(item => item.category === transaction.category);
     
@@ -106,7 +94,6 @@ const Dashboard: React.FC = () => {
     return acc;
   }, [] as { category: string; amount: number }[]);
   
-  // Get largest expense
   const largestExpense = transactions.length > 0 ? 
     Math.max(...transactions.map(t => t.amount)) : 0;
   
@@ -147,7 +134,7 @@ const Dashboard: React.FC = () => {
         
         <StatCard
           title={t('recentActivity')}
-          value={`${transactions.length} ${t('transactions')}`}
+          value={`${transactions.length} ${t('transactionsLabel')}`}
           description={t('last30Days')}
           icon={<Clock className="h-5 w-5" />}
           delay={3}
