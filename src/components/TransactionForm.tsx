@@ -1,25 +1,25 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlusCircle } from 'lucide-react';
-import { Category } from './CategoryBadge';
+import { Category } from '@/types';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useTransactions } from '@/context/TransactionsContext';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface TransactionFormProps {
-  onAddTransaction: (transaction: {
-    description: string;
-    amount: number;
-    date: string;
-    category: Category;
-  }) => void;
   className?: string;
 }
 
-export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransaction, className }) => {
+export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) => {
+  const { t } = useTranslation();
+  const { addTransaction, paymentMethods } = useTransactions();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [category, setCategory] = useState<Category>('other');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [dueMonth, setDueMonth] = useState<string | undefined>(undefined);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const categories: Category[] = [
@@ -27,19 +27,32 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
     'housing', 'utilities', 'health', 'other'
   ];
 
+  // Effect to handle due month when payment method changes
+  useEffect(() => {
+    const selectedMethod = paymentMethods.find(m => m.id === paymentMethod);
+    if (selectedMethod?.type === 'credit') {
+      const currentDate = new Date();
+      setDueMonth(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`);
+    } else {
+      setDueMonth(undefined);
+    }
+  }, [paymentMethod, paymentMethods]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!description || !amount || !date) {
-      toast.error('Please fill all required fields');
+      toast.error(t('fillAllFields'));
       return;
     }
     
-    onAddTransaction({
+    addTransaction({
       description,
       amount: parseFloat(amount),
       date,
       category,
+      paymentMethod,
+      dueMonth,
     });
     
     // Reset form
@@ -47,9 +60,18 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
     setAmount('');
     setDate(new Date().toISOString().split('T')[0]);
     setCategory('other');
+    setPaymentMethod('cash');
+    setDueMonth(undefined);
     setIsExpanded(false);
     
-    toast.success('Transaction added successfully');
+    toast.success(t('transactionAdded'));
+  };
+  
+  // Helper function to get next month
+  const getNextMonth = () => {
+    const date = new Date();
+    date.setMonth(date.getMonth() + 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   };
 
   return (
@@ -60,16 +82,16 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
           className="w-full p-4 flex items-center justify-center text-primary hover:text-primary/80 transition-colors"
         >
           <PlusCircle className="w-5 h-5 mr-2" />
-          <span>Add New Transaction</span>
+          <span>{t('addNewTransaction')}</span>
         </button>
       ) : (
         <form onSubmit={handleSubmit} className="p-4 scale-in">
-          <h3 className="text-lg font-medium mb-4">New Transaction</h3>
+          <h3 className="text-lg font-medium mb-4">{t('newTransaction')}</h3>
           
           <div className="space-y-4">
             <div>
               <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1">
-                Description
+                {t('description')}
               </label>
               <input
                 id="description"
@@ -77,7 +99,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="What did you spend on?"
+                placeholder={t('whatDidYouSpendOn')}
                 required
               />
             </div>
@@ -85,7 +107,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="amount" className="block text-sm font-medium text-foreground mb-1">
-                  Amount
+                  {t('amount')}
                 </label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
@@ -105,7 +127,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
               
               <div>
                 <label htmlFor="date" className="block text-sm font-medium text-foreground mb-1">
-                  Date
+                  {t('date')}
                 </label>
                 <input
                   id="date"
@@ -120,7 +142,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
             
             <div>
               <label className="block text-sm font-medium text-foreground mb-1">
-                Category
+                {t('category')}
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {categories.map((cat) => (
@@ -133,11 +155,66 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
                       category === cat ? 'ring-2 ring-ring' : 'opacity-70 hover:opacity-100'
                     )}
                   >
-                    {cat}
+                    {t(cat)}
                   </button>
                 ))}
               </div>
             </div>
+            
+            <div>
+              <label htmlFor="paymentMethod" className="block text-sm font-medium text-foreground mb-1">
+                {t('paymentMethod')}
+              </label>
+              <select
+                id="paymentMethod"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-input bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {paymentMethods.map((method) => (
+                  <option key={method.id} value={method.id}>
+                    {method.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {paymentMethods.find(m => m.id === paymentMethod)?.type === 'credit' && (
+              <div>
+                <label htmlFor="dueMonth" className="block text-sm font-medium text-foreground mb-1">
+                  {t('dueMonth')}
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentDate = new Date();
+                      setDueMonth(`${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`);
+                    }}
+                    className={cn(
+                      "p-2 rounded-lg text-center text-xs transition-all border",
+                      dueMonth === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}` 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-secondary text-secondary-foreground'
+                    )}
+                  >
+                    {t('currentMonth')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDueMonth(getNextMonth())}
+                    className={cn(
+                      "p-2 rounded-lg text-center text-xs transition-all border",
+                      dueMonth === getNextMonth() 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-secondary text-secondary-foreground'
+                    )}
+                  >
+                    {t('nextMonth')}
+                  </button>
+                </div>
+              </div>
+            )}
             
             <div className="flex justify-end space-x-2">
               <button
@@ -145,13 +222,13 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ onAddTransacti
                 onClick={() => setIsExpanded(false)}
                 className="px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 type="submit"
                 className="px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                Add Transaction
+                {t('addTransaction')}
               </button>
             </div>
           </div>

@@ -1,82 +1,97 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { DollarSign, TrendingUp, Wallet, ArrowDown, Clock, CreditCard } from 'lucide-react';
+import { DollarSign, TrendingUp, Wallet, ArrowDown, Clock, CreditCard, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import StatCard from './StatCard';
 import ExpenseSummary from './ExpenseSummary';
-import TransactionList, { Transaction } from './TransactionList';
+import TransactionList from './TransactionList';
 import TransactionForm from './TransactionForm';
-import { Category } from './CategoryBadge';
-
-// Sample data for demo purposes
-const generateSampleTransactions = (): Transaction[] => {
-  const categories: Category[] = ['food', 'shopping', 'transport', 'entertainment', 'housing', 'utilities', 'health', 'other'];
-  const descriptions = [
-    'Grocery shopping', 'Monthly rent', 'Uber ride', 'Movie tickets', 
-    'Electricity bill', 'New shoes', 'Dinner with friends', 'Doctor visit',
-    'Phone bill', 'Gym membership', 'Office supplies', 'Coffee'
-  ];
-  
-  return Array.from({ length: 12 }).map((_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-    
-    return {
-      id: `tr-${i}`,
-      description: descriptions[Math.floor(Math.random() * descriptions.length)],
-      amount: parseFloat((Math.random() * 200 + 10).toFixed(2)),
-      date: date.toISOString().split('T')[0],
-      category: categories[Math.floor(Math.random() * categories.length)]
-    };
-  });
-};
-
-const generateSampleChartData = () => {
-  const today = new Date();
-  return Array.from({ length: 7 }).map((_, i) => {
-    const date = new Date();
-    date.setDate(today.getDate() - 6 + i);
-    const spending = Math.floor(Math.random() * 150 + 50);
-    
-    return {
-      name: date.toLocaleDateString('en-US', { weekday: 'short' }),
-      spending
-    };
-  });
-};
+import { useTransactions } from '@/context/TransactionsContext';
+import { useSettings } from '@/context/SettingsContext';
+import { toast } from 'sonner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const Dashboard: React.FC = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { t } = useTranslation();
+  const { transactions, paymentMethods } = useTransactions();
+  const { settings } = useSettings();
   
-  useEffect(() => {
-    // Simulate loading data from a database
-    setTimeout(() => {
-      setTransactions(generateSampleTransactions());
-      setChartData(generateSampleChartData());
-      setLoading(false);
-    }, 800);
-  }, []);
-  
-  const handleAddTransaction = (transaction: {
-    description: string;
-    amount: number;
-    date: string;
-    category: Category;
-  }) => {
-    const newTransaction: Transaction = {
-      id: `tr-${Date.now()}`,
-      ...transaction
-    };
+  // Generate chart data from transactions
+  const generateChartData = () => {
+    const days = 7;
+    const today = new Date();
+    const dailyData: { [key: string]: number } = {};
     
-    setTransactions([newTransaction, ...transactions]);
+    // Initialize the past 7 days with 0
+    for (let i = 0; i < days; i++) {
+      const date = new Date();
+      date.setDate(today.getDate() - (days - 1) + i);
+      const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+      dailyData[dayName] = 0;
+    }
+    
+    // Sum transactions by day
+    transactions.forEach(transaction => {
+      const transactionDate = new Date(transaction.date);
+      // Only include transactions from the past 7 days
+      if ((today.getTime() - transactionDate.getTime()) / (1000 * 3600 * 24) < days) {
+        const dayName = transactionDate.toLocaleDateString('en-US', { weekday: 'short' });
+        dailyData[dayName] = (dailyData[dayName] || 0) + transaction.amount;
+      }
+    });
+    
+    // Convert to array format for chart
+    return Object.keys(dailyData).map(key => ({
+      name: key,
+      spending: dailyData[key]
+    }));
   };
   
-  const totalSpending = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+  const chartData = generateChartData();
   
-  const spendingByCategory = transactions.reduce((acc, transaction) => {
+  // Calculate current month transactions
+  const getCurrentMonthTransactions = () => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    
+    return transactions.filter(transaction => {
+      // For regular transactions, check the transaction date
+      const transactionDate = new Date(transaction.date);
+      
+      // For credit card transactions with future due date, check the dueMonth
+      if (transaction.dueMonth) {
+        const [dueYear, dueMonth] = transaction.dueMonth.split('-').map(Number);
+        return dueYear === currentYear && dueMonth - 1 === currentMonth;
+      }
+      
+      return transactionDate.getFullYear() === currentYear && 
+             transactionDate.getMonth() === currentMonth;
+    });
+  };
+  
+  const currentMonthTransactions = getCurrentMonthTransactions();
+  const totalSpending = currentMonthTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+  
+  // Check if spending limit is exceeded
+  const isSpendingLimitExceeded = totalSpending > settings.spendingLimit;
+  
+  // Show alert toast when spending limit is exceeded
+  useEffect(() => {
+    if (isSpendingLimitExceeded) {
+      toast.warning(
+        `${t('spendingLimitAlert')}: ${t('limitExceeded')} $${settings.spendingLimit.toFixed(2)}`,
+        {
+          duration: 5000,
+          icon: <AlertTriangle className="text-yellow-500" />
+        }
+      );
+    }
+  }, [isSpendingLimitExceeded, settings.spendingLimit, t]);
+  
+  // Spending by category
+  const spendingByCategory = currentMonthTransactions.reduce((acc, transaction) => {
     const existingCategory = acc.find(item => item.category === transaction.category);
     
     if (existingCategory) {
@@ -89,57 +104,51 @@ const Dashboard: React.FC = () => {
     }
     
     return acc;
-  }, [] as { category: Category; amount: number }[]);
+  }, [] as { category: string; amount: number }[]);
   
-  if (loading) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading your financial data...</p>
-        </div>
-      </div>
-    );
-  }
+  // Get largest expense
+  const largestExpense = transactions.length > 0 ? 
+    Math.max(...transactions.map(t => t.amount)) : 0;
   
   return (
     <div className="container mx-auto px-4 py-6 mt-16">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">Financial Dashboard</h1>
-        <p className="text-muted-foreground">Track your spending and manage your finances</p>
+        <h1 className="text-2xl font-bold mb-1">{t('financialDashboard')}</h1>
+        <p className="text-muted-foreground">{t('trackSpending')}</p>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
-          title="Total Spending"
+          title={t('totalSpending')}
           value={`$${totalSpending.toFixed(2)}`}
-          description="Current month"
+          description={t('currentMonth')}
           icon={<DollarSign className="h-5 w-5" />}
           trend={{ value: 12, isPositive: false }}
           delay={0}
+          alert={isSpendingLimitExceeded}
         />
         
         <StatCard
-          title="Average Daily"
+          title={t('averageDaily')}
           value={`$${(totalSpending / 30).toFixed(2)}`}
-          description="Last 30 days"
+          description={t('last30Days')}
           icon={<TrendingUp className="h-5 w-5" />}
           trend={{ value: 3, isPositive: true }}
           delay={1}
         />
         
         <StatCard
-          title="Largest Expense"
-          value={`$${Math.max(...transactions.map(t => t.amount), 0).toFixed(2)}`}
-          description="This month"
+          title={t('largestExpense')}
+          value={`$${largestExpense.toFixed(2)}`}
+          description={t('thisMonth')}
           icon={<ArrowDown className="h-5 w-5" />}
           delay={2}
         />
         
         <StatCard
-          title="Recent Activity"
-          value={`${transactions.length} transactions`}
-          description="Last 30 days"
+          title={t('recentActivity')}
+          value={`${transactions.length} ${t('transactions')}`}
+          description={t('last30Days')}
           icon={<Clock className="h-5 w-5" />}
           delay={3}
         />
@@ -151,10 +160,10 @@ const Dashboard: React.FC = () => {
           "slide-up"
         )} style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Spending Trends</h3>
+            <h3 className="text-lg font-medium">{t('spendingTrends')}</h3>
             <div className="flex space-x-2">
               <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                This Week
+                {t('thisWeek')}
               </div>
             </div>
           </div>
@@ -174,7 +183,7 @@ const Dashboard: React.FC = () => {
                 <XAxis dataKey="name" tickLine={false} />
                 <YAxis tickFormatter={(value) => `$${value}`} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  formatter={(value) => [`$${value}`, 'Spending']}
+                  formatter={(value) => [`$${value}`, t('spending')]}
                   contentStyle={{ 
                     borderRadius: '8px', 
                     border: '1px solid hsl(var(--border))',
@@ -195,13 +204,13 @@ const Dashboard: React.FC = () => {
         </div>
         
         <div className="slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
-          <TransactionForm onAddTransaction={handleAddTransaction} />
+          <TransactionForm />
         </div>
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 slide-up" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-          <TransactionList transactions={transactions} />
+          <TransactionList />
         </div>
         
         <div className="slide-up" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>

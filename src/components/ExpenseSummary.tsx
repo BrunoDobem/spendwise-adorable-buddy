@@ -1,12 +1,12 @@
 
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
-import { Category } from './CategoryBadge';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ExpenseSummaryProps {
   data: {
-    category: Category;
+    category: string;
     amount: number;
   }[];
   className?: string;
@@ -24,22 +24,24 @@ const COLORS = {
 };
 
 export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ data, className }) => {
+  const { t } = useTranslation();
   const totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
   
   const chartData = data.map(item => ({
-    name: item.category.charAt(0).toUpperCase() + item.category.slice(1),
+    name: t(item.category),
     value: item.amount,
+    category: item.category,
     percentage: Math.round((item.amount / totalAmount) * 100)
   }));
   
   return (
     <div className={cn("bg-card rounded-xl shadow-sm border border-border/50 p-4", className)}>
-      <h3 className="text-lg font-medium mb-4">Spending by Category</h3>
+      <h3 className="text-lg font-medium mb-4">{t('categoryBreakdown')}</h3>
       
       {totalAmount === 0 ? (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">No expenses to analyze</p>
-          <p className="text-sm text-muted-foreground mt-1">Add some transactions to see your spending breakdown</p>
+          <p className="text-muted-foreground">{t('noTransactionsFound')}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('addTransaction')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -60,7 +62,7 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ data, className 
                   {chartData.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={COLORS[entry.name.toLowerCase() as Category]} 
+                      fill={COLORS[entry.category as keyof typeof COLORS] || '#6b7280'} 
                     />
                   ))}
                 </Pie>
@@ -76,7 +78,7 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ data, className 
                   <div className="flex items-center">
                     <div 
                       className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: COLORS[item.name.toLowerCase() as Category] }}
+                      style={{ backgroundColor: COLORS[item.category as keyof typeof COLORS] || '#6b7280' }}
                     />
                     <span className="text-sm">{item.name}</span>
                   </div>
@@ -92,7 +94,7 @@ export const ExpenseSummary: React.FC<ExpenseSummaryProps> = ({ data, className 
             
             <div className="mt-6 pt-4 border-t border-border">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Total Spending</span>
+                <span className="text-sm font-medium">{t('totalSpending')}</span>
                 <span className="text-lg font-bold">${totalAmount.toFixed(2)}</span>
               </div>
             </div>
