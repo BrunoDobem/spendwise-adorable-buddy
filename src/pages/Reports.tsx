@@ -5,8 +5,9 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
-import { PieChart as PieChartIcon, BarChart3, LineChart as LineChartIcon, Calendar } from 'lucide-react';
+import { PieChart as PieChartIcon, BarChart3, LineChart as LineChartIcon, Calendar, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Sample data
 const monthlyData = [
@@ -27,23 +28,33 @@ const categoryData = [
   { name: 'Other', value: 5 },
 ];
 
+const paymentMethodData = [
+  { name: 'Credit', value: 45 },
+  { name: 'Debit', value: 25 },
+  { name: 'Cash', value: 20 },
+  { name: 'Pix', value: 5 },
+  { name: 'Transfer', value: 5 },
+];
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#8dd1e1'];
 
 const Reports = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('monthly');
   const [dateRange, setDateRange] = useState('6months');
   
   const tabs = [
-    { id: 'monthly', label: 'Monthly Overview', icon: <BarChart3 className="w-4 h-4 mr-2" /> },
-    { id: 'trends', label: 'Spending Trends', icon: <LineChartIcon className="w-4 h-4 mr-2" /> },
-    { id: 'breakdown', label: 'Category Breakdown', icon: <PieChartIcon className="w-4 h-4 mr-2" /> },
+    { id: 'monthly', label: t('monthlyOverview'), icon: <BarChart3 className="w-4 h-4 mr-2" /> },
+    { id: 'trends', label: t('spendingTrends'), icon: <LineChartIcon className="w-4 h-4 mr-2" /> },
+    { id: 'breakdown', label: t('categoryBreakdown'), icon: <PieChartIcon className="w-4 h-4 mr-2" /> },
+    { id: 'payment', label: t('paymentMethod'), icon: <CreditCard className="w-4 h-4 mr-2" /> },
   ];
   
   const dateRanges = [
-    { id: '1month', label: '1 Month' },
-    { id: '3months', label: '3 Months' },
-    { id: '6months', label: '6 Months' },
-    { id: '1year', label: '1 Year' },
+    { id: '1month', label: '1 ' + t('month') },
+    { id: '3months', label: '3 ' + t('months') },
+    { id: '6months', label: '6 ' + t('months') },
+    { id: '1year', label: '1 ' + t('year') },
   ];
   
   return (
@@ -56,8 +67,8 @@ const Reports = () => {
               <PieChartIcon className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold mb-1">Financial Reports</h1>
-              <p className="text-muted-foreground">Analyze your spending patterns</p>
+              <h1 className="text-2xl font-bold mb-1">{t('financialReports')}</h1>
+              <p className="text-muted-foreground">{t('analyzeYourSpending')}</p>
             </div>
           </div>
         </div>
@@ -121,7 +132,7 @@ const Reports = () => {
                     <XAxis dataKey="name" tickLine={false} />
                     <YAxis tickFormatter={(value) => `$${value}`} tickLine={false} axisLine={false} />
                     <Tooltip
-                      formatter={(value) => [`$${value}`, 'Expenses']}
+                      formatter={(value) => [`$${value}`, t('expenses')]}
                       contentStyle={{ 
                         borderRadius: '8px', 
                         border: '1px solid hsl(var(--border))',
@@ -143,7 +154,7 @@ const Reports = () => {
                     <XAxis dataKey="name" tickLine={false} />
                     <YAxis tickFormatter={(value) => `$${value}`} tickLine={false} axisLine={false} />
                     <Tooltip
-                      formatter={(value) => [`$${value}`, 'Expenses']}
+                      formatter={(value) => [`$${value}`, t('expenses')]}
                       contentStyle={{ 
                         borderRadius: '8px', 
                         border: '1px solid hsl(var(--border))',
@@ -181,7 +192,7 @@ const Reports = () => {
                           ))}
                         </Pie>
                         <Tooltip
-                          formatter={(value) => [`${value}%`, 'Percentage']}
+                          formatter={(value) => [`${value}%`, t('percentage')]}
                           contentStyle={{ 
                             borderRadius: '8px', 
                             border: '1px solid hsl(var(--border))',
@@ -201,7 +212,7 @@ const Reports = () => {
                               className="w-3 h-3 rounded-full mr-2"
                               style={{ backgroundColor: COLORS[index % COLORS.length] }}
                             />
-                            <span className="text-sm">{entry.name}</span>
+                            <span className="text-sm">{t(entry.name.toLowerCase())}</span>
                           </div>
                           <div className="flex items-center">
                             <div className="text-xs bg-muted px-2 py-0.5 rounded-full">
@@ -214,7 +225,67 @@ const Reports = () => {
                     
                     <div className="mt-6 pt-4 border-t border-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Total Spending</span>
+                        <span className="text-sm font-medium">{t('totalSpending')}</span>
+                        <span className="text-lg font-bold">$7,200</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'payment' && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+                  <div className="flex justify-center items-center">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={paymentMethodData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {paymentMethodData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value) => [`${value}%`, t('percentage')]}
+                          contentStyle={{ 
+                            borderRadius: '8px', 
+                            border: '1px solid hsl(var(--border))',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <div className="flex flex-col justify-center">
+                    <ul className="space-y-3">
+                      {paymentMethodData.map((entry, index) => (
+                        <li key={index} className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div 
+                              className="w-3 h-3 rounded-full mr-2"
+                              style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                            />
+                            <span className="text-sm">{t(entry.name.toLowerCase())}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <div className="text-xs bg-muted px-2 py-0.5 rounded-full">
+                              {entry.value}%
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    
+                    <div className="mt-6 pt-4 border-t border-border">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{t('totalSpending')}</span>
                         <span className="text-lg font-bold">$7,200</span>
                       </div>
                     </div>
@@ -227,35 +298,35 @@ const Reports = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 slide-up" style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}>
           <div className="bg-card rounded-xl shadow-sm border border-border/50 p-4">
-            <h3 className="text-lg font-medium mb-4">Spending Summary</h3>
+            <h3 className="text-lg font-medium mb-4">{t('spendingSummary')}</h3>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Average Monthly</span>
+                <span className="text-sm text-muted-foreground">{t('averageMonthly')}</span>
                 <span className="font-medium">$1,200</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Highest Month</span>
+                <span className="text-sm text-muted-foreground">{t('highestMonth')}</span>
                 <span className="font-medium">$1,900 (Feb)</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Lowest Month</span>
+                <span className="text-sm text-muted-foreground">{t('lowestMonth')}</span>
                 <span className="font-medium">$1,200 (Jan)</span>
               </div>
               <div className="h-px bg-border my-2" />
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Year-to-Date</span>
+                <span className="text-sm font-medium">{t('yearToDate')}</span>
                 <span className="text-lg font-bold">$9,200</span>
               </div>
             </div>
           </div>
           
           <div className="bg-card rounded-xl shadow-sm border border-border/50 p-4">
-            <h3 className="text-lg font-medium mb-4">Top Spending Categories</h3>
+            <h3 className="text-lg font-medium mb-4">{t('topSpendingCategories')}</h3>
             <div className="space-y-3">
               {categoryData.slice(0, 4).map((category, index) => (
                 <div key={index} className="group">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm">{category.name}</span>
+                    <span className="text-sm">{t(category.name.toLowerCase())}</span>
                     <span className="text-sm font-medium">{category.value}%</span>
                   </div>
                   <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">

@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
 import CategoryBadge, { Category } from './CategoryBadge';
-import { ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { ChevronDown, ChevronUp, Search, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PaymentMethod } from './TransactionForm';
+import { toast } from 'sonner';
 
 export interface Transaction {
   id: string;
@@ -10,14 +12,21 @@ export interface Transaction {
   amount: number;
   date: string;
   category: Category;
+  paymentMethod?: PaymentMethod;
+  isNextMonth?: boolean;
 }
 
 interface TransactionListProps {
   transactions: Transaction[];
+  onDeleteTransaction?: (id: string) => void;
   className?: string;
 }
 
-export const TransactionList: React.FC<TransactionListProps> = ({ transactions, className }) => {
+export const TransactionList: React.FC<TransactionListProps> = ({ 
+  transactions, 
+  onDeleteTransaction,
+  className 
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -33,7 +42,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
   
   const filteredTransactions = transactions.filter(transaction => 
     transaction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    transaction.category.toLowerCase().includes(searchQuery.toLowerCase())
+    transaction.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (transaction.paymentMethod && 
+     transaction.paymentMethod.toLowerCase().includes(searchQuery.toLowerCase()))
   );
   
   const sortedTransactions = [...filteredTransactions].sort((a, b) => {
@@ -53,6 +64,13 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
       day: 'numeric', 
       year: 'numeric' 
     }).format(date);
+  };
+
+  const handleDelete = (id: string) => {
+    if (onDeleteTransaction) {
+      onDeleteTransaction(id);
+      toast.success('Transação excluída com sucesso');
+    }
   };
   
   return (
@@ -80,8 +98,9 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
           ) : (
             <div>
               <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-muted rounded-lg text-xs font-medium text-muted-foreground mb-2">
-                <div className="col-span-5">Description</div>
+                <div className="col-span-4">Description</div>
                 <div className="col-span-2">Category</div>
+                <div className="col-span-2">Payment</div>
                 <div 
                   className="col-span-2 flex items-center cursor-pointer"
                   onClick={() => handleSort('date')}
@@ -94,7 +113,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
                   )}
                 </div>
                 <div 
-                  className="col-span-3 text-right flex items-center justify-end cursor-pointer"
+                  className="col-span-1 text-right flex items-center justify-end cursor-pointer"
                   onClick={() => handleSort('amount')}
                 >
                   Amount
@@ -104,6 +123,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
                       <ChevronDown className="w-3 h-3 ml-1" />
                   )}
                 </div>
+                <div className="col-span-1"></div>
               </div>
               
               <div className="space-y-2">
@@ -116,15 +136,36 @@ export const TransactionList: React.FC<TransactionListProps> = ({ transactions, 
                       animationFillMode: 'backwards' 
                     }}
                   >
-                    <div className="col-span-5 font-medium truncate">{transaction.description}</div>
+                    <div className="col-span-4 font-medium truncate">
+                      {transaction.description}
+                      {transaction.isNextMonth && (
+                        <span className="ml-2 text-xs px-1.5 py-0.5 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 rounded">
+                          Next Month
+                        </span>
+                      )}
+                    </div>
                     <div className="col-span-2">
                       <CategoryBadge category={transaction.category} />
                     </div>
                     <div className="col-span-2 text-sm text-muted-foreground">
+                      {transaction.paymentMethod || "—"}
+                    </div>
+                    <div className="col-span-2 text-sm text-muted-foreground">
                       {formatDate(transaction.date)}
                     </div>
-                    <div className="col-span-3 text-right font-medium">
+                    <div className="col-span-1 text-right font-medium">
                       ${transaction.amount.toFixed(2)}
+                    </div>
+                    <div className="col-span-1 flex justify-end">
+                      {onDeleteTransaction && (
+                        <button
+                          onClick={() => handleDelete(transaction.id)}
+                          className="p-1 text-muted-foreground hover:text-destructive transition-colors"
+                          aria-label="Delete transaction"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
