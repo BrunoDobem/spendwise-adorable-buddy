@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Search, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PaymentMethod } from './TransactionForm';
 import { toast } from 'sonner';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export interface Transaction {
   id: string;
@@ -27,6 +28,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   onDeleteTransaction,
   className 
 }) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -69,7 +71,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const handleDelete = (id: string) => {
     if (onDeleteTransaction) {
       onDeleteTransaction(id);
-      toast.success('Transação excluída com sucesso');
+      toast.success(t('transactionDeleted'));
     }
   };
   
@@ -77,12 +79,12 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     <div className={cn("bg-card rounded-xl shadow-sm border border-border/50 overflow-hidden", className)}>
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium">Recent Transactions</h3>
+          <h3 className="text-lg font-medium">{t('recentActivity')}</h3>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <input
               type="text"
-              placeholder="Search transactions..."
+              placeholder={t('searchTransactions')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-3 py-1.5 rounded-lg text-sm border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
@@ -93,19 +95,19 @@ export const TransactionList: React.FC<TransactionListProps> = ({
         <div className="overflow-hidden">
           {sortedTransactions.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No transactions found</p>
+              <p className="text-muted-foreground">{t('noTransactionsFound')}</p>
             </div>
           ) : (
             <div>
               <div className="grid grid-cols-12 gap-2 px-4 py-2 bg-muted rounded-lg text-xs font-medium text-muted-foreground mb-2">
-                <div className="col-span-4">Description</div>
-                <div className="col-span-2">Category</div>
-                <div className="col-span-2">Payment</div>
+                <div className="col-span-4">{t('description')}</div>
+                <div className="col-span-2">{t('category')}</div>
+                <div className="col-span-2">{t('paymentMethod')}</div>
                 <div 
                   className="col-span-2 flex items-center cursor-pointer"
                   onClick={() => handleSort('date')}
                 >
-                  Date
+                  {t('date')}
                   {sortBy === 'date' && (
                     sortDirection === 'asc' ? 
                       <ChevronUp className="w-3 h-3 ml-1" /> : 
@@ -116,7 +118,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                   className="col-span-1 text-right flex items-center justify-end cursor-pointer"
                   onClick={() => handleSort('amount')}
                 >
-                  Amount
+                  {t('amount')}
                   {sortBy === 'amount' && (
                     sortDirection === 'asc' ? 
                       <ChevronUp className="w-3 h-3 ml-1" /> : 
@@ -140,7 +142,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       {transaction.description}
                       {transaction.isNextMonth && (
                         <span className="ml-2 text-xs px-1.5 py-0.5 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 rounded">
-                          Next Month
+                          {t('nextMonth')}
                         </span>
                       )}
                     </div>
@@ -148,7 +150,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
                       <CategoryBadge category={transaction.category} />
                     </div>
                     <div className="col-span-2 text-sm text-muted-foreground">
-                      {transaction.paymentMethod || "—"}
+                      {transaction.paymentMethod ? t(transaction.paymentMethod as string) : "—"}
                     </div>
                     <div className="col-span-2 text-sm text-muted-foreground">
                       {formatDate(transaction.date)}

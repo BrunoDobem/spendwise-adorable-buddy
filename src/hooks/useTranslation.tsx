@@ -22,7 +22,7 @@ const ptBR: Translations = {
   largestExpense: 'Maior Despesa',
   thisMonth: 'Este mês',
   recentActivity: 'Atividade Recente',
-  transactionsLabel: 'transações', // Renamed to avoid duplicate
+  transactionsLabel: 'transações',
   spendingTrends: 'Tendências de Gastos',
   thisWeek: 'Esta semana',
   spending: 'Gastos',
@@ -41,6 +41,10 @@ const ptBR: Translations = {
   addTransaction: 'Adicionar Transação',
   fillAllFields: 'Por favor, preencha todos os campos obrigatórios',
   transactionAdded: 'Transação adicionada com sucesso',
+  transactionDeleted: 'Transação excluída com sucesso',
+  searchTransactions: 'Buscar transações...',
+  noTransactionsFound: 'Nenhuma transação encontrada',
+  nextMonth: 'Próximo Mês',
   
   // Categorias
   food: 'Alimentação',
@@ -65,7 +69,7 @@ const ptBR: Translations = {
   financialReports: 'Relatórios Financeiros',
   analyzeYourSpending: 'Analise seus padrões de gastos',
   monthlyOverview: 'Visão Mensal',
-  spendingTrendsReport: 'Tendências de Gastos', // Renamed to avoid duplicate
+  spendingTrendsReport: 'Tendências de Gastos',
   categoryBreakdown: 'Divisão por Categoria',
   month: 'Mês',
   months: 'Meses',
@@ -122,7 +126,7 @@ const en: Translations = {
   largestExpense: 'Largest Expense',
   thisMonth: 'This month',
   recentActivity: 'Recent Activity',
-  transactionsLabel: 'transactions', // Renamed to avoid duplicate
+  transactionsLabel: 'transactions',
   spendingTrends: 'Spending Trends',
   thisWeek: 'This Week',
   spending: 'Spending',
@@ -141,6 +145,10 @@ const en: Translations = {
   addTransaction: 'Add Transaction',
   fillAllFields: 'Please fill all required fields',
   transactionAdded: 'Transaction added successfully',
+  transactionDeleted: 'Transaction deleted successfully',
+  searchTransactions: 'Search transactions...',
+  noTransactionsFound: 'No transactions found',
+  nextMonth: 'Next Month',
   
   // Categorias
   food: 'Food',
@@ -165,7 +173,7 @@ const en: Translations = {
   financialReports: 'Financial Reports',
   analyzeYourSpending: 'Analyze your spending patterns',
   monthlyOverview: 'Monthly Overview',
-  spendingTrendsReport: 'Spending Trends', // Renamed to avoid duplicate
+  spendingTrendsReport: 'Spending Trends Report',
   categoryBreakdown: 'Category Breakdown',
   month: 'Month',
   months: 'Months',
