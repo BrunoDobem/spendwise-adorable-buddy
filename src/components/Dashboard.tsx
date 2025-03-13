@@ -1,16 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { DollarSign, TrendingUp, Wallet, ArrowDown, Clock, CreditCard, AlertTriangle } from 'lucide-react';
+import { DollarSign, TrendingUp, Wallet, ArrowDown, Clock, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import StatCard from './StatCard';
 import ExpenseSummary from './ExpenseSummary';
 import TransactionList, { Transaction } from './TransactionList';
-import TransactionForm, { PaymentMethod } from './TransactionForm';
+import TransactionForm from './TransactionForm';
 import { Category } from './CategoryBadge';
-import { useSettings } from '@/hooks/useSettings';
-import SpendingLimitBanner from './SpendingLimitBanner';
-import { useTranslation } from '@/hooks/useTranslation';
 
+// Sample data for demo purposes
 const generateSampleTransactions = (): Transaction[] => {
   const categories: Category[] = ['food', 'shopping', 'transport', 'entertainment', 'housing', 'utilities', 'health', 'other'];
   const descriptions = [
@@ -18,22 +17,17 @@ const generateSampleTransactions = (): Transaction[] => {
     'Electricity bill', 'New shoes', 'Dinner with friends', 'Doctor visit',
     'Phone bill', 'Gym membership', 'Office supplies', 'Coffee'
   ];
-  const paymentMethods: PaymentMethod[] = ['cash', 'credit', 'debit', 'pix', 'transfer'];
   
   return Array.from({ length: 12 }).map((_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - Math.floor(Math.random() * 30));
-    const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
-    const isNextMonth = paymentMethod === 'credit' ? Math.random() > 0.5 : false;
     
     return {
       id: `tr-${i}`,
       description: descriptions[Math.floor(Math.random() * descriptions.length)],
       amount: parseFloat((Math.random() * 200 + 10).toFixed(2)),
       date: date.toISOString().split('T')[0],
-      category: categories[Math.floor(Math.random() * categories.length)],
-      paymentMethod,
-      isNextMonth
+      category: categories[Math.floor(Math.random() * categories.length)]
     };
   });
 };
@@ -53,13 +47,12 @@ const generateSampleChartData = () => {
 };
 
 const Dashboard: React.FC = () => {
-  const { t } = useTranslation();
-  const { settings } = useSettings();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    // Simulate loading data from a database
     setTimeout(() => {
       setTransactions(generateSampleTransactions());
       setChartData(generateSampleChartData());
@@ -72,8 +65,6 @@ const Dashboard: React.FC = () => {
     amount: number;
     date: string;
     category: Category;
-    paymentMethod: PaymentMethod;
-    isNextMonth: boolean;
   }) => {
     const newTransaction: Transaction = {
       id: `tr-${Date.now()}`,
@@ -82,21 +73,10 @@ const Dashboard: React.FC = () => {
     
     setTransactions([newTransaction, ...transactions]);
   };
-
-  const handleDeleteTransaction = (id: string) => {
-    setTransactions(transactions.filter(transaction => transaction.id !== id));
-  };
   
-  const currentMonthTransactions = transactions.filter(transaction => {
-    if (transaction.paymentMethod === 'credit' && transaction.isNextMonth) {
-      return false;
-    }
-    return true;
-  });
-
-  const totalSpending = currentMonthTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+  const totalSpending = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
   
-  const spendingByCategory = currentMonthTransactions.reduce((acc, transaction) => {
+  const spendingByCategory = transactions.reduce((acc, transaction) => {
     const existingCategory = acc.find(item => item.category === transaction.category);
     
     if (existingCategory) {
@@ -110,16 +90,13 @@ const Dashboard: React.FC = () => {
     
     return acc;
   }, [] as { category: Category; amount: number }[]);
-
-  const isOverSpendingLimit = settings.spendingLimit > 0 && totalSpending > settings.spendingLimit;
-  const spendingPercentage = settings.spendingLimit > 0 ? (totalSpending / settings.spendingLimit) * 100 : 0;
   
   if (loading) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">{t('loadingFinancialData')}</p>
+          <p className="mt-4 text-muted-foreground">Loading your financial data...</p>
         </div>
       </div>
     );
@@ -128,50 +105,41 @@ const Dashboard: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-6 mt-16">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-1">{t('financialDashboard')}</h1>
-        <p className="text-muted-foreground">{t('trackYourSpending')}</p>
+        <h1 className="text-2xl font-bold mb-1">Financial Dashboard</h1>
+        <p className="text-muted-foreground">Track your spending and manage your finances</p>
       </div>
-
-      {settings.spendingLimit > 0 && (
-        <SpendingLimitBanner 
-          currentSpending={totalSpending} 
-          spendingLimit={settings.spendingLimit}
-          className="mb-6 fade-in"
-        />
-      )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
-          title={t('totalSpending')}
+          title="Total Spending"
           value={`$${totalSpending.toFixed(2)}`}
-          description={t('currentMonth')}
+          description="Current month"
           icon={<DollarSign className="h-5 w-5" />}
           trend={{ value: 12, isPositive: false }}
           delay={0}
-          alert={isOverSpendingLimit}
         />
         
         <StatCard
-          title={t('averageDaily')}
+          title="Average Daily"
           value={`$${(totalSpending / 30).toFixed(2)}`}
-          description={t('last30Days')}
+          description="Last 30 days"
           icon={<TrendingUp className="h-5 w-5" />}
           trend={{ value: 3, isPositive: true }}
           delay={1}
         />
         
         <StatCard
-          title={t('largestExpense')}
+          title="Largest Expense"
           value={`$${Math.max(...transactions.map(t => t.amount), 0).toFixed(2)}`}
-          description={t('thisMonth')}
+          description="This month"
           icon={<ArrowDown className="h-5 w-5" />}
           delay={2}
         />
         
         <StatCard
-          title={t('recentActivity')}
-          value={`${transactions.length} ${t('transactionsLabel')}`}
-          description={t('last30Days')}
+          title="Recent Activity"
+          value={`${transactions.length} transactions`}
+          description="Last 30 days"
           icon={<Clock className="h-5 w-5" />}
           delay={3}
         />
@@ -183,10 +151,10 @@ const Dashboard: React.FC = () => {
           "slide-up"
         )} style={{ animationDelay: '0.1s', animationFillMode: 'forwards' }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">{t('spendingTrends')}</h3>
+            <h3 className="text-lg font-medium">Spending Trends</h3>
             <div className="flex space-x-2">
               <div className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
-                {t('thisWeek')}
+                This Week
               </div>
             </div>
           </div>
@@ -206,7 +174,7 @@ const Dashboard: React.FC = () => {
                 <XAxis dataKey="name" tickLine={false} />
                 <YAxis tickFormatter={(value) => `$${value}`} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  formatter={(value) => [`$${value}`, t('spending')]}
+                  formatter={(value) => [`$${value}`, 'Spending']}
                   contentStyle={{ 
                     borderRadius: '8px', 
                     border: '1px solid hsl(var(--border))',
@@ -233,10 +201,7 @@ const Dashboard: React.FC = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 slide-up" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
-          <TransactionList 
-            transactions={transactions} 
-            onDeleteTransaction={handleDeleteTransaction}
-          />
+          <TransactionList transactions={transactions} />
         </div>
         
         <div className="slide-up" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
