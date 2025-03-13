@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { PlusCircle } from 'lucide-react';
 import { Category } from '@/types';
@@ -5,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useTransactions } from '@/context/TransactionsContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useSettings } from '@/context/SettingsContext';
 
 interface TransactionFormProps {
   className?: string;
@@ -12,6 +14,7 @@ interface TransactionFormProps {
 
 export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) => {
   const { t } = useTranslation();
+  const { settings, formatCurrency } = useSettings();
   const { addTransaction, paymentMethods } = useTransactions();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -70,6 +73,8 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
   };
 
+  const currencySymbol = settings.currency === 'USD' ? '$' : 'R$';
+
   return (
     <div className={cn("bg-card rounded-xl shadow-sm border border-border/50", className)}>
       {!isExpanded ? (
@@ -106,7 +111,7 @@ export const TransactionForm: React.FC<TransactionFormProps> = ({ className }) =
                   {t('amount')}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
                   <input
                     id="amount"
                     type="number"

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, TrendingUp, Wallet, ArrowDown, Clock, CreditCard, AlertTriangle } from 'lucide-react';
@@ -14,7 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 const Dashboard: React.FC = () => {
   const { t } = useTranslation();
   const { transactions, paymentMethods } = useTransactions();
-  const { settings } = useSettings();
+  const { settings, formatCurrency } = useSettings();
   
   const generateChartData = () => {
     const days = 7;
@@ -70,14 +71,14 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (isSpendingLimitExceeded) {
       toast.warning(
-        `${t('spendingLimitAlert')}: ${t('limitExceeded')} $${settings.spendingLimit.toFixed(2)}`,
+        `${t('spendingLimitAlert')}: ${t('limitExceeded')} ${formatCurrency(settings.spendingLimit)}`,
         {
           duration: 5000,
           icon: <AlertTriangle className="text-yellow-500" />
         }
       );
     }
-  }, [isSpendingLimitExceeded, settings.spendingLimit, t]);
+  }, [isSpendingLimitExceeded, settings.spendingLimit, t, formatCurrency]);
   
   const spendingByCategory = currentMonthTransactions.reduce((acc, transaction) => {
     const existingCategory = acc.find(item => item.category === transaction.category);
@@ -94,8 +95,13 @@ const Dashboard: React.FC = () => {
     return acc;
   }, [] as { category: string; amount: number }[]);
   
-  const largestExpense = transactions.length > 0 ? 
-    Math.max(...transactions.map(t => t.amount)) : 0;
+  // Find the largest expense
+  const largestExpense = transactions.length > 0 
+    ? transactions.reduce((max, current) => 
+        current.amount > max.amount ? current : max, 
+        transactions[0]
+      ) 
+    : null;
   
   return (
     <div className="container mx-auto px-4 py-6 mt-16">
@@ -107,7 +113,7 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           title={t('totalSpending')}
-          value={`$${totalSpending.toFixed(2)}`}
+          value={formatCurrency(totalSpending)}
           description={t('currentMonth')}
           icon={<DollarSign className="h-5 w-5" />}
           trend={{ value: 12, isPositive: false }}
@@ -117,7 +123,7 @@ const Dashboard: React.FC = () => {
         
         <StatCard
           title={t('averageDaily')}
-          value={`$${(totalSpending / 30).toFixed(2)}`}
+          value={formatCurrency(totalSpending / 30)}
           description={t('last30Days')}
           icon={<TrendingUp className="h-5 w-5" />}
           trend={{ value: 3, isPositive: true }}
@@ -126,8 +132,8 @@ const Dashboard: React.FC = () => {
         
         <StatCard
           title={t('largestExpense')}
-          value={`$${largestExpense.toFixed(2)}`}
-          description={t('thisMonth')}
+          value={largestExpense ? formatCurrency(largestExpense.amount) : '0.00'}
+          description={largestExpense ? largestExpense.description : t('noTransactions')}
           icon={<ArrowDown className="h-5 w-5" />}
           delay={2}
         />
@@ -168,9 +174,13 @@ const Dashboard: React.FC = () => {
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                 <XAxis dataKey="name" tickLine={false} />
-                <YAxis tickFormatter={(value) => `$${value}`} tickLine={false} axisLine={false} />
+                <YAxis 
+                  tickFormatter={(value) => formatCurrency(value)} 
+                  tickLine={false} 
+                  axisLine={false} 
+                />
                 <Tooltip 
-                  formatter={(value) => [`$${value}`, t('spending')]}
+                  formatter={(value) => [formatCurrency(value as number), t('spending')]}
                   contentStyle={{ 
                     borderRadius: '8px', 
                     border: '1px solid hsl(var(--border))',
